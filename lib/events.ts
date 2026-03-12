@@ -214,7 +214,6 @@ export function getStats(period: "day" | "week" | "month") {
 
   const prompts = filtered.filter((e) => e.event_type === "beforeSubmitPrompt").length;
   const toolCalls = filtered.filter((e) => e.event_type === "postToolUse").length;
-  const toolFailures = filtered.filter((e) => e.event_type === "postToolUseFailure").length;
   const sessions = filtered.filter((e) => e.event_type === "sessionStart").length;
   const thoughts = filtered.filter((e) => e.event_type === "afterAgentThought").length;
   const fileEdits = filtered.filter((e) => e.event_type === "afterFileEdit").length;
@@ -228,7 +227,6 @@ export function getStats(period: "day" | "week" | "month") {
   return {
     prompts,
     toolCalls,
-    toolFailures,
     sessions,
     thoughts,
     fileEdits,

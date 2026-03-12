@@ -69,7 +69,7 @@ export function SessionTable() {
         <thead>
           <tr className="border-b border-base-300/80 bg-base-200/80">
             <th className="p-3 text-xs font-semibold uppercase tracking-[0.14em] text-base-content/60">
-              Session ID
+              Session
             </th>
             <th className="p-3 text-xs font-semibold uppercase tracking-[0.14em] text-base-content/60">
               End time
@@ -83,10 +83,20 @@ export function SessionTable() {
           </tr>
         </thead>
         <tbody>
-          {sessions.map((s) => (
+          {sessions.map((s, i) => (
             <tr key={s.session_id} className="border-b border-base-200/80 last:border-0">
-              <td className="p-3 font-mono text-xs text-base-content/70">
-                {s.session_id?.slice(0, 8)}…
+              <td className="p-3 text-base-content/70">
+                #{i + 1}
+                {s.timestamp && (
+                  <span className="ml-2 text-base-content/50">
+                    {new Date(s.timestamp).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                )}
               </td>
               <td className="p-3 text-base-content/70">
                 {s.timestamp ? s.timestamp.slice(0, 19).replace("T", " ") : "—"}

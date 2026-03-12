@@ -233,11 +233,9 @@ export function VocabStats() {
   return (
     <div className="space-y-6">
       {/* summary cards */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4">
         {[
           { label: "Thinking records", value: data.totalRecords },
-          { label: "Total tokens", value: data.totalTokens.toLocaleString() },
-          { label: "Unique words", value: data.words.length },
           { label: "Frequent phrases", value: data.phrases.length },
         ].map((c) => (
           <div

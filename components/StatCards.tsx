@@ -6,7 +6,6 @@ import Link from "next/link";
 type Stats = {
   prompts: number;
   toolCalls: number;
-  toolFailures: number;
   sessions: number;
   thoughts: number;
   fileEdits: number;
