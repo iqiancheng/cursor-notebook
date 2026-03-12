@@ -98,21 +98,39 @@ export function DailyChart({ days = 7 }: { days?: number }) {
         <h3 className="text-sm font-semibold text-base-content">
           Last {days} days
         </h3>
-        <div className="btn-group btn-group-xs">
-          <button
-            type="button"
-            className={`btn btn-xs ${mode === "line" ? "btn-active" : ""}`}
-            onClick={() => setMode("line")}
-          >
-            Line
-          </button>
-          <button
-            type="button"
-            className={`btn btn-xs ${mode === "stacked" ? "btn-active" : ""}`}
-            onClick={() => setMode("stacked")}
-          >
-            Stacked
-          </button>
+        <div
+          className="cursor-pointer rounded p-1 text-base-content/60 hover:text-base-content"
+          onClick={() => setMode(mode === "line" ? "stacked" : "line")}
+          role="button"
+          aria-label={mode === "line" ? "Switch to stacked mode" : "Switch to line mode"}
+          aria-pressed={mode === "stacked"}
+        >
+          {mode === "line" ? (
+            <svg viewBox="0 0 24 24" className="h-3 w-3" aria-hidden="true">
+              <polyline
+                points="3 17 8 11 13 14 21 5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" className="h-3 w-3" aria-hidden="true">
+              <path
+                d="M3 16L8 10L13 13L21 6V18H3Z"
+                fill="currentColor"
+                fillOpacity="0.7"
+              />
+              <path
+                d="M3 18H21"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+              />
+            </svg>
+          )}
         </div>
       </div>
       <div ref={chartRef} className="h-64 w-full" />
