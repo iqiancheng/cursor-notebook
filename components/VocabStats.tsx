@@ -3,6 +3,10 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
+const TOP_CHART = 10;
+const TOP_LIST = 100;
+const STORAGE_KEY = "vocab_starred_v1";
+
 function usePrimaryColor(): string {
   const [color, setColor] = useState("hsl(217, 91%, 60%)");
   useEffect(() => {
@@ -76,7 +80,7 @@ function BarChart({
       const chart = echarts.init(chartRef.current);
       instanceRef.current = chart;
 
-      const topN = items.slice(0, 15).reverse();
+      const topN = items.slice(0, 10).reverse();
       const textColor = isDark ? "#9ca3af" : "#6b7280";
       const lineColor = isDark ? "#374151" : "#e5e7eb";
       const labelColor = isDark ? "#d1d5db" : "#374151";
@@ -131,11 +135,9 @@ function BarChart({
   }, [items, primaryColor, isDark]);
 
   if (items.length === 0) return null;
-  return <div ref={chartRef} className="w-full" style={{ height: "min(450px, 55vh)" }} />;
+  const chartHeight = Math.min(Math.max(400, items.length * 22), 1200);
+  return <div ref={chartRef} className="w-full overflow-auto" style={{ height: chartHeight }} />;
 }
-
-const TOP_N = 15;
-const STORAGE_KEY = "vocab_starred_v1";
 
 function loadStarred(): { words: string[]; phrases: string[] } {
   if (typeof window === "undefined") return { words: [], phrases: [] };
@@ -207,7 +209,16 @@ export function VocabStats() {
 
   const chartItems = useMemo(
     () =>
-      filteredItems.slice(0, TOP_N).map((d) => ({
+      filteredItems.slice(0, TOP_CHART).map((d) => ({
+        name: "word" in d ? d.word : (d as PhraseFreq).phrase,
+        value: d.count,
+      })),
+    [filteredItems]
+  );
+
+  const listItems = useMemo(
+    () =>
+      filteredItems.slice(0, TOP_LIST).map((d) => ({
         name: "word" in d ? d.word : (d as PhraseFreq).phrase,
         value: d.count,
       })),
@@ -288,7 +299,7 @@ export function VocabStats() {
       {/* chart */}
       <div className="rounded-xl bg-base-100 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.04)]">
         <p className="mb-2 text-sm text-base-content/70">
-          Top {TOP_N} · <span className="text-primary font-medium">Click a bar to open in Thinking</span>
+          Top {TOP_CHART} · <span className="text-primary font-medium">Click a bar to open in Thinking</span>
         </p>
         {chartItems.length === 0 ? (
           <div className="flex min-h-[min(300px,40vh)] flex-col items-center justify-center rounded-lg border border-dashed border-base-300 py-12 text-center">
@@ -308,14 +319,14 @@ export function VocabStats() {
         )}
       </div>
 
-      {/* Top 15 list with star buttons */}
-      {chartItems.length > 0 && (
+      {/* Top 100 list with star buttons */}
+      {listItems.length > 0 && (
         <div className="rounded-xl bg-base-100 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.04)]">
           <p className="mb-3 text-xs font-medium uppercase tracking-[0.16em] text-base-content/50">
-            Top {TOP_N} · Click to open in Thinking, star to save
+            Top {TOP_LIST} · Click to open in Thinking, star to save
           </p>
           <div className="flex flex-wrap gap-2">
-            {chartItems.map((item) => {
+            {listItems.map((item) => {
               const text = item.name;
               const isWord = tab === "words";
               const isStarred = isWord ? starred.words.includes(text) : starred.phrases.includes(text);
