@@ -55,6 +55,31 @@ export function SessionTable() {
     return `${(ms / 60000).toFixed(1)}min`;
   }
 
+  function formatLocalDateTime(iso: string) {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    const pad = (n: number) => (n < 10 ? `0${n}` : String(n));
+    const year = d.getFullYear();
+    const month = pad(d.getMonth() + 1);
+    const day = pad(d.getDate());
+    const hours = pad(d.getHours());
+    const minutes = pad(d.getMinutes());
+    const seconds = pad(d.getSeconds());
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  }
+
+  function getSessionStart(iso?: string, durationMs?: number) {
+    if (!iso) return undefined;
+    const end = new Date(iso);
+    if (Number.isNaN(end.getTime())) return undefined;
+    if (durationMs != null && durationMs > 0) {
+      const start = new Date(end.getTime() - durationMs);
+      return formatLocalDateTime(start.toISOString());
+    }
+    // Fallback: no valid duration, use end time as start display
+    return formatLocalDateTime(iso);
+  }
+
   return (
     <div className="overflow-hidden rounded-xl bg-base-100 shadow-[0_18px_45px_rgba(15,23,42,0.04)]">
       <div className="flex flex-wrap items-center gap-4 border-b border-base-200/80 bg-base-200/50 px-4 py-3 text-sm">
@@ -87,31 +112,27 @@ export function SessionTable() {
           </tr>
         </thead>
         <tbody>
-          {sessions.map((s, i) => (
-            <tr key={s.session_id} className="border-b border-base-200/80 last:border-0">
-              <td className="p-3 text-base-content/70">
-                #{i + 1}
-                {s.timestamp && (
-                  <span className="ml-2 text-base-content/50">
-                    {new Date(s.timestamp).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                )}
-              </td>
-              <td className="p-3 text-base-content/70">
-                {s.title ?? "—"}
-              </td>
-              <td className="p-3 text-base-content/70">
-                {s.timestamp ? s.timestamp.slice(0, 19).replace("T", " ") : "—"}
-              </td>
-              <td className="p-3 text-base-content/70">{formatMs(s.duration_ms)}</td>
-              <td className="p-3 text-base-content/70">{s.reason ?? "—"}</td>
-            </tr>
-          ))}
+          {sessions.map((s, i) => {
+            const startLabel = getSessionStart(s.timestamp, s.duration_ms);
+            return (
+              <tr key={s.session_id} className="border-b border-base-200/80 last:border-0">
+                <td className="p-3 text-base-content/70">
+                  #{i + 1}
+                  {startLabel && (
+                    <span className="ml-2 text-base-content/50">{startLabel}</span>
+                  )}
+                </td>
+                <td className="p-3 text-base-content/70">
+                  {s.title ?? "—"}
+                </td>
+                <td className="p-3 text-base-content/70">
+                  {s.timestamp ? formatLocalDateTime(s.timestamp) : "—"}
+                </td>
+                <td className="p-3 text-base-content/70">{formatMs(s.duration_ms)}</td>
+                <td className="p-3 text-base-content/70">{s.reason ?? "—"}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
