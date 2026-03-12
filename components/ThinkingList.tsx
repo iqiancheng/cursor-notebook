@@ -269,7 +269,7 @@ function GroupCard({
               record={r}
               index={i}
               accordionName={accordionName}
-              defaultOpen={false}
+              defaultOpen={groupIndex === 0 && i === 0}
               playing={speakingId === itemId}
               onTogglePlay={() => onSpeak(itemId, r.text.trim())}
               highlight={highlight}
