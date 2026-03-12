@@ -29,7 +29,10 @@ export function StatCards({ period = "week" }: { period?: "day" | "week" | "mont
     return (
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="h-24 rounded-xl bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
+          <div
+            key={i}
+            className="h-24 animate-pulse rounded-xl bg-base-100 shadow-[0_18px_45px_rgba(15,23,42,0.04)]"
+          />
         ))}
       </div>
     );
@@ -37,18 +40,18 @@ export function StatCards({ period = "week" }: { period?: "day" | "week" | "mont
 
   if (!stats) {
     return (
-      <p className="text-zinc-500 dark:text-zinc-400">
-        无法加载数据，请确认 EVENTS_JSONL_PATH 指向 ~/cursor-events.jsonl 且 Cursor Hooks 已采集事件。
+      <p className="text-sm text-base-content/60">
+        Unable to load data. Make sure EVENTS_JSONL_PATH points to ~/cursor-events.jsonl and that Cursor Hooks are capturing events.
       </p>
     );
   }
 
   const cards = [
-    { label: "提问数", value: stats.prompts, href: "/daily" },
-    { label: "工具调用", value: stats.toolCalls, href: "/daily" },
-    { label: "会话数", value: stats.sessions, href: "/sessions" },
-    { label: "Thinking 条数", value: stats.thoughts, href: "/thinking" },
-    { label: "文件编辑", value: stats.fileEdits },
+    { label: "Prompts", value: stats.prompts, href: "/daily" },
+    { label: "Tool calls", value: stats.toolCalls, href: "/daily" },
+    { label: "Sessions", value: stats.sessions, href: "/sessions" },
+    { label: "Thinking entries", value: stats.thoughts, href: "/thinking" },
+    { label: "File edits", value: stats.fileEdits },
     // { label: "上下文 token 约", value: stats.contextTokens > 0 ? stats.contextTokens.toLocaleString() : "—" },
   ];
 
@@ -57,12 +60,14 @@ export function StatCards({ period = "week" }: { period?: "day" | "week" | "mont
       {cards.map(({ label, value, href }) => (
         <div
           key={label}
-          className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className="group rounded-xl bg-base-100 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_55px_rgba(15,23,42,0.08)]"
         >
-          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">{label}</p>
-          <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+          <p className="text-xs font-medium uppercase tracking-[0.16em] text-base-content/50">
+            {label}
+          </p>
+          <p className="mt-2 text-2xl font-semibold text-base-content">
             {href ? (
-              <Link href={href} className="hover:underline">
+              <Link href={href} className="transition group-hover:text-primary">
                 {value}
               </Link>
             ) : (

@@ -111,9 +111,32 @@ const markdownComponents = {
   ),
 };
 
-function thinkingTitle(record: ThinkingRecord, index: number): string {
+function extractTitleFromText(text: string, maxLen = 80): string {
+  const firstLine = text.split(/\r?\n/)[0]?.trim() ?? "";
+  const stripped = firstLine
+    .replace(/^#+\s*/, "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .trim();
+  if (!stripped) return "Thinking…";
+  return stripped.length > maxLen ? `${stripped.slice(0, maxLen)}…` : stripped;
+}
+
+function formatDuration(ms: number): string {
+  if (ms < 1000) return `${ms}ms`;
+  if (ms >= 60_000) {
+    const m = Math.floor(ms / 60_000);
+    const s = Math.round((ms % 60_000) / 1000);
+    return s > 0 ? `${m}m ${s}s` : `${m}m`;
+  }
+  const s = ms / 1000;
+  return s >= 10 ? `${Math.round(s)}s` : `${s.toFixed(1)}s`;
+}
+
+function thinkingMeta(record: ThinkingRecord, index: number): string {
   const time = record.timestamp.slice(0, 19).replace("T", " ");
-  return `#${index + 1} ${time} · ${record.model} · ${record.duration_ms}ms`;
+  return `#${index + 1} · ${time} · ${record.model} · ${formatDuration(record.duration_ms)}`;
 }
 
 function PlayButton({ playing, onClick }: { playing: boolean; onClick: () => void }) {
@@ -121,7 +144,7 @@ function PlayButton({ playing, onClick }: { playing: boolean; onClick: () => voi
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); onClick(); }}
-      aria-label={playing ? "停止朗读" : "朗读英语"}
+      aria-label={playing ? "Stop reading aloud" : "Read reasoning in English"}
       className="btn btn-circle btn-ghost btn-sm"
     >
       {playing ? (
@@ -154,24 +177,35 @@ function ThinkingItem({
   onTogglePlay: () => void;
   highlight: string;
 }) {
+  const text = record.text.trim();
+  const title = extractTitleFromText(text);
+  const meta = thinkingMeta(record, index);
+  const lines = text.split(/\r?\n/);
+  const bodyText = lines.length > 1 ? lines.slice(1).join("\n").trim() : "";
+
   return (
-    <div className="collapse collapse-arrow bg-base-100 border border-base-300">
+    <div className="collapse collapse-arrow rounded-lg bg-base-100 shadow-[0_4px_12px_rgba(15,23,42,0.04)]">
       <input
         type="radio"
         name={accordionName}
         defaultChecked={defaultOpen}
       />
-      <div className="collapse-title font-semibold min-h-0 py-2 text-sm">
-        {thinkingTitle(record, index)}
+      <div className="collapse-title min-h-0 py-2">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-xs font-medium text-base-content/50">{meta}</span>
+          <span className="font-semibold text-sm text-primary">{title}</span>
+        </div>
       </div>
       <div className="collapse-content relative text-sm pr-12">
         <div className="pt-1 break-words">
-          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-            {applyHighlightMarkdown(record.text, highlight)}
-          </ReactMarkdown>
+          {bodyText ? (
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+              {applyHighlightMarkdown(bodyText, highlight)}
+            </ReactMarkdown>
+          ) : null}
         </div>
         <div className="absolute right-2 top-1/2 -translate-y-1/2">
-          <div className="tooltip tooltip-left" data-tip="点击朗读英语">
+          <div className="tooltip tooltip-left" data-tip="Click to read aloud in English">
             <PlayButton playing={playing} onClick={onTogglePlay} />
           </div>
         </div>
@@ -195,16 +229,17 @@ function GroupCard({
 }) {
   const accordionName = `thinking-accordion-${groupIndex}`;
   const [showFullPrompt, setShowFullPrompt] = useState(false);
-  const prompt = group.user_prompt ?? "";
+  const prompt = (group.user_prompt ?? "").trim();
   const isLongPrompt = prompt.length > 200;
 
   return (
-    <li className="p-4">
-      {group.user_prompt && (
-        <div className="rounded-lg border border-info/30 bg-info/10 p-3 mb-3">
+    <li className="relative p-4 pl-7">
+      <span className="pointer-events-none absolute left-2 top-4 bottom-0 w-px bg-base-300/50" />
+      <span className="pointer-events-none absolute left-[5px] top-4 h-2.5 w-2.5 rounded-full border-2 border-base-100 bg-primary shadow-sm" />
+      {prompt && (
+        <div className="mb-3 rounded-lg bg-primary/5 p-3 ring-1 ring-primary/20">
           <div className="mb-1 flex items-center justify-between gap-2">
-            <span className="block text-xs font-medium text-info">
-              我的问题
+            <span className="block text-xs font-medium uppercase tracking-wider text-primary/80">
             </span>
             {isLongPrompt && (
               <button
@@ -212,7 +247,7 @@ function GroupCard({
                 className="btn btn-ghost btn-xs px-1 text-[11px]"
                 onClick={() => setShowFullPrompt((v) => !v)}
               >
-                {showFullPrompt ? "收起" : "展开"}
+                {showFullPrompt ? "Collapse" : "Expand"}
               </button>
             )}
           </div>
@@ -223,7 +258,7 @@ function GroupCard({
       )}
 
       <span className="mb-2 block text-xs font-medium text-success">
-        Thinking ({group.items.length} 条)
+        Thinking ({group.items.length} items)
       </span>
       <div className="space-y-2">
         {group.items.map((r, i) => {
@@ -236,7 +271,7 @@ function GroupCard({
               accordionName={accordionName}
               defaultOpen={false}
               playing={speakingId === itemId}
-              onTogglePlay={() => onSpeak(itemId, r.text)}
+              onTogglePlay={() => onSpeak(itemId, r.text.trim())}
               highlight={highlight}
             />
           );
@@ -278,19 +313,26 @@ export function ThinkingList() {
     if (!highlight) return groups;
     const q = highlight.toLowerCase();
     return groups.filter((g) => {
-      if (g.user_prompt && g.user_prompt.toLowerCase().includes(q)) return true;
+      if (g.user_prompt && g.user_prompt.trim().toLowerCase().includes(q)) return true;
       return g.items.some((r) => r.text.toLowerCase().includes(q));
     });
   }, [groups, highlight]);
 
   if (loading && visibleGroups.length === 0) {
-    return <div className="card bg-base-200 p-6"><span className="loading loading-spinner loading-sm"></span> 加载中…</div>;
+    return (
+      <div className="rounded-xl bg-base-100 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.04)]">
+        <span className="loading loading-spinner loading-sm mr-2" />
+        <span className="text-sm text-base-content/70">Loading…</span>
+      </div>
+    );
   }
 
   if (visibleGroups.length === 0) {
     return (
-      <div className="card bg-base-200 p-6">
-        <p className="opacity-60">暂无 Thinking 记录。请使用带 thinking 的模型（如 Claude Opus thinking）并确保 Hooks 已采集。</p>
+      <div className="rounded-xl bg-base-100 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.04)]">
+        <p className="text-sm text-base-content/70">
+          No thinking records yet. Use a thinking-enabled model (for example Claude Opus thinking) and make sure hooks are capturing data.
+        </p>
       </div>
     );
   }
@@ -302,14 +344,14 @@ export function ThinkingList() {
       {highlight && (
         <div className="alert alert-info flex items-center justify-between text-sm">
           <span>
-            当前高亮词：
+            Current highlight:
             <span className="font-mono font-semibold">{highlight}</span>
-            ，仅展示包含该词的 Thinking 记录。
+            . Only thinking records containing this text are shown.
           </span>
         </div>
       )}
-      <div className="card bg-base-200">
-        <ul className="divide-y divide-base-300">
+      <div className="rounded-xl bg-base-100 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.04)]">
+        <ul className="space-y-3">
           {visibleGroups.map((g, i) => (
             <GroupCard
               key={`${g.conversation_id}-${g.prompt_timestamp ?? i}`}
@@ -323,7 +365,7 @@ export function ThinkingList() {
         </ul>
       </div>
       <div className="flex items-center justify-between">
-        <p className="text-sm opacity-60">共 {total} 组</p>
+        <p className="text-sm opacity-60">Total {total} groups</p>
         <div className="join">
           <button
             type="button"
@@ -331,7 +373,7 @@ export function ThinkingList() {
             disabled={page <= 1}
             className="join-item btn btn-sm"
           >
-            上一页
+            Prev
           </button>
           <span className="join-item btn btn-sm btn-disabled">
             {page} / {totalPages}
@@ -342,7 +384,7 @@ export function ThinkingList() {
             disabled={page >= totalPages}
             className="join-item btn btn-sm"
           >
-            下一页
+            Next
           </button>
         </div>
       </div>

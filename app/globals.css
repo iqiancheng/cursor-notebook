@@ -7,3 +7,38 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
+
+/* Cursor-like light palette */
+:root[data-theme="corporate"] {
+  /* background */
+  --b1: 210 40% 98%;
+  --b2: 210 40% 96%;
+  --b3: 210 40% 92%;
+  --bc: 222 47% 11%;
+
+  /* primary blue */
+  --p: 217 91% 60%;
+  --pc: 0 0% 100%;
+
+  /* accent / neutral (subtle) */
+  --a: 199 89% 48%;
+  --ac: 0 0% 100%;
+  --n: 215 25% 27%;
+  --nc: 210 40% 98%;
+}
+
+/* Dark theme roughly mirroring cursor dark */
+:root[data-theme="business"] {
+  --b1: 222 47% 11%;
+  --b2: 222 47% 7%;
+  --b3: 222 47% 5%;
+  --bc: 210 40% 96%;
+
+  --p: 217 91% 60%;
+  --pc: 0 0% 100%;
+
+  --a: 199 89% 48%;
+  --ac: 0 0% 100%;
+  --n: 215 25% 20%;
+  --nc: 210 40% 96%;
+}

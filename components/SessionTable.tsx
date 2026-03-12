@@ -23,13 +23,20 @@ export function SessionTable() {
   }, []);
 
   if (loading) {
-    return <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">加载中…</div>;
+    return (
+      <div className="rounded-xl bg-base-100 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.04)]">
+        <span className="loading loading-spinner loading-sm mr-2" />
+        <span className="align-middle text-sm text-base-content/70">Loading sessions…</span>
+      </div>
+    );
   }
 
   if (sessions.length === 0) {
     return (
-      <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
-        <p className="text-zinc-500 dark:text-zinc-400">暂无会话记录。请确保 Cursor Hooks 已配置 sessionStart / sessionEnd。</p>
+      <div className="rounded-xl bg-base-100 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.04)]">
+        <p className="text-sm text-base-content/70">
+          No sessions yet. Make sure Cursor Hooks are configured for <code>sessionStart</code> / <code>sessionEnd</code>.
+        </p>
       </div>
     );
   }
@@ -41,25 +48,35 @@ export function SessionTable() {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
+    <div className="overflow-hidden rounded-xl bg-base-100 shadow-[0_18px_45px_rgba(15,23,42,0.04)]">
       <table className="w-full text-left text-sm">
         <thead>
-          <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800">
-            <th className="p-3 font-medium text-zinc-700 dark:text-zinc-300">会话 ID</th>
-            <th className="p-3 font-medium text-zinc-700 dark:text-zinc-300">结束时间</th>
-            <th className="p-3 font-medium text-zinc-700 dark:text-zinc-300">时长</th>
-            <th className="p-3 font-medium text-zinc-700 dark:text-zinc-300">结束原因</th>
+          <tr className="border-b border-base-300/80 bg-base-200/80">
+            <th className="p-3 text-xs font-semibold uppercase tracking-[0.14em] text-base-content/60">
+              Session ID
+            </th>
+            <th className="p-3 text-xs font-semibold uppercase tracking-[0.14em] text-base-content/60">
+              End time
+            </th>
+            <th className="p-3 text-xs font-semibold uppercase tracking-[0.14em] text-base-content/60">
+              Duration
+            </th>
+            <th className="p-3 text-xs font-semibold uppercase tracking-[0.14em] text-base-content/60">
+              End reason
+            </th>
           </tr>
         </thead>
         <tbody>
           {sessions.map((s) => (
-            <tr key={s.session_id} className="border-b border-zinc-100 dark:border-zinc-700">
-              <td className="p-3 font-mono text-zinc-600 dark:text-zinc-400">{s.session_id?.slice(0, 8)}…</td>
-              <td className="p-3 text-zinc-600 dark:text-zinc-400">
+            <tr key={s.session_id} className="border-b border-base-200/80 last:border-0">
+              <td className="p-3 font-mono text-xs text-base-content/70">
+                {s.session_id?.slice(0, 8)}…
+              </td>
+              <td className="p-3 text-base-content/70">
                 {s.timestamp ? s.timestamp.slice(0, 19).replace("T", " ") : "—"}
               </td>
-              <td className="p-3 text-zinc-600 dark:text-zinc-400">{formatMs(s.duration_ms)}</td>
-              <td className="p-3 text-zinc-600 dark:text-zinc-400">{s.reason ?? "—"}</td>
+              <td className="p-3 text-base-content/70">{formatMs(s.duration_ms)}</td>
+              <td className="p-3 text-base-content/70">{s.reason ?? "—"}</td>
             </tr>
           ))}
         </tbody>

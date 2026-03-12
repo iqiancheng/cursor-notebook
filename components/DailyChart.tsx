@@ -27,35 +27,89 @@ export function DailyChart({ days = 7 }: { days?: number }) {
     const thoughts = dates.map((d) => data[d]?.afterAgentThought ?? 0);
 
     const chart = echarts.init(chartRef.current);
+    const onResize = () => chart.resize();
+    window.addEventListener("resize", onResize);
+
     chart.setOption({
-      tooltip: { trigger: "axis" },
-      legend: { data: ["提问", "工具调用", "Thinking"], bottom: 0 },
-      grid: { left: "3%", right: "4%", bottom: "15%", top: "10%", containLabel: true },
-      xAxis: { type: "category", data: dates },
-      yAxis: { type: "value" },
+      color: ["#3b82f6", "#0ea5e9", "#16a34a"],
+      tooltip: {
+        trigger: "axis",
+        backgroundColor: "rgba(15,23,42,0.9)",
+        borderWidth: 0,
+        textStyle: { color: "#e5e7eb", fontSize: 12 },
+        axisPointer: { type: "line" },
+      },
+      legend: {
+        data: ["Prompts", "Tool calls", "Thinking"],
+        bottom: 0,
+        textStyle: { color: "#6b7280", fontSize: 11 },
+        itemWidth: 12,
+        itemHeight: 8,
+      },
+      grid: { left: "3%", right: "4%", bottom: "18%", top: "10%", containLabel: true },
+      xAxis: {
+        type: "category",
+        data: dates,
+        axisLine: { lineStyle: { color: "#e5e7eb" } },
+        axisLabel: { color: "#6b7280", fontSize: 11 },
+        axisTick: { show: false },
+      },
+      yAxis: {
+        type: "value",
+        axisLine: { show: false },
+        axisLabel: { color: "#6b7280", fontSize: 11 },
+        splitLine: { lineStyle: { color: "#e5e7eb", type: "dashed" } },
+      },
       series: [
-        { name: "提问", type: "line", data: prompts, smooth: true },
-        { name: "工具调用", type: "line", data: toolCalls, smooth: true },
-        { name: "Thinking", type: "line", data: thoughts, smooth: true },
+        {
+          name: "Prompts",
+          type: "line",
+          data: prompts,
+          smooth: true,
+          symbol: "circle",
+          symbolSize: 4,
+          areaStyle: { opacity: 0.12 },
+        },
+        {
+          name: "Tool calls",
+          type: "line",
+          data: toolCalls,
+          smooth: true,
+          symbol: "circle",
+          symbolSize: 4,
+          areaStyle: { opacity: 0.12 },
+        },
+        {
+          name: "Thinking",
+          type: "line",
+          data: thoughts,
+          smooth: true,
+          symbol: "circle",
+          symbolSize: 4,
+          areaStyle: { opacity: 0.12 },
+        },
       ],
     });
 
     return () => {
+      window.removeEventListener("resize", onResize);
       chart.dispose();
     };
   }, [data]);
 
   if (data === null) {
     return (
-      <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
-        <p className="text-zinc-500 dark:text-zinc-400">无法加载趋势数据</p>
+      <div className="rounded-xl bg-base-100 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.04)]">
+        <p className="text-sm text-base-content/70">Unable to load trend data</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
-      <h3 className="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">过去 {days} 天趋势</h3>
+    <div className="rounded-xl bg-base-100 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.04)]">
+      <h3 className="mb-2 text-sm font-semibold text-base-content">
+        Last {days} days
+      </h3>
       <div ref={chartRef} className="h-64 w-full" />
     </div>
   );

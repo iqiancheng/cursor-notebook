@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Cursor 学英语",
-  description: "Cursor 学英语，使用数据可视化仪表盘",
+  title: "Cursor Notebook",
+  description: "Cursor Notebook – visualize your Cursor usage and agent thinking.",
 };
 
 export default function RootLayout({
@@ -25,9 +25,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh" data-theme="corporate" suppressHydrationWarning>
+    <html lang="en" data-theme="corporate" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-base-100 text-base-content`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-base-200 text-base-content`}
       >
         <ThemeScript />
         <Navbar />

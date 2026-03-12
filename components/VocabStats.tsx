@@ -31,19 +31,31 @@ function BarChart({ items }: { items: { name: string; value: number }[] }) {
 
       const top30 = items.slice(0, 30).reverse();
       chart.setOption({
-        tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+        color: ["#3b82f6"],
+        tooltip: {
+          trigger: "axis",
+          axisPointer: { type: "shadow" },
+          backgroundColor: "rgba(15,23,42,0.9)",
+          borderWidth: 0,
+          textStyle: { color: "#e5e7eb", fontSize: 12 },
+        },
         grid: { left: 120, right: 30, top: 10, bottom: 30 },
-        xAxis: { type: "value" },
+        xAxis: {
+          type: "value",
+          axisLine: { show: false },
+          axisLabel: { color: "#6b7280", fontSize: 11 },
+          splitLine: { lineStyle: { color: "#e5e7eb", type: "dashed" } },
+        },
         yAxis: {
           type: "category",
           data: top30.map((d) => d.name),
-          axisLabel: { fontSize: 12 },
+          axisLabel: { fontSize: 12, color: "#374151" },
         },
         series: [
           {
             type: "bar",
             data: top30.map((d) => d.value),
-            itemStyle: { borderRadius: [0, 4, 4, 0] },
+            itemStyle: { borderRadius: [0, 6, 6, 0] },
           },
         ],
       });
@@ -68,7 +80,7 @@ function SearchInput({ value, onChange }: { value: string; onChange: (v: string)
   return (
     <input
       type="text"
-      placeholder="搜索..."
+      placeholder="Search..."
       className="input input-bordered input-sm w-full max-w-xs"
       value={value}
       onChange={(e) => onChange(e.target.value)}
@@ -83,32 +95,30 @@ export function VocabStats() {
   const [tab, setTab] = useState<Tab>("words");
   const [search, setSearch] = useState("");
   const [showChart, setShowChart] = useState(true);
-  const [starredWords, setStarredWords] = useState<string[]>([]);
+  const [starredWords, setStarredWords] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = window.localStorage.getItem("vocab_new_words_v1");
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((w): w is string => typeof w === "string");
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  });
   const [onlyStarred, setOnlyStarred] = useState(false);
   const [sortAsc, setSortAsc] = useState(false);
   const [minCount, setMinCount] = useState(1);
 
   useEffect(() => {
-    setLoading(true);
     fetch("/api/vocab?wordLimit=1000&phraseLimit=1000")
       .then((r) => r.json())
       .then(setData)
       .catch(() => setData(null))
       .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const raw = window.localStorage.getItem("vocab_new_words_v1");
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        setStarredWords(parsed.filter((w): w is string => typeof w === "string"));
-      }
-    } catch {
-      // ignore
-    }
   }, []);
 
   useEffect(() => {
@@ -180,17 +190,18 @@ export function VocabStats() {
 
   if (loading) {
     return (
-      <div className="card bg-base-200 p-6">
-        <span className="loading loading-spinner loading-sm" /> 正在分析词频…
+      <div className="rounded-xl bg-base-100 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.04)]">
+        <span className="loading loading-spinner loading-sm mr-2" />
+        <span className="text-sm text-base-content/70">Analyzing vocabulary…</span>
       </div>
     );
   }
 
   if (!data || (data.words.length === 0 && data.phrases.length === 0)) {
     return (
-      <div className="card bg-base-200 p-6">
-        <p className="opacity-60">
-          暂无数据。请确认 thinking-corpus.jsonl 中有记录。
+      <div className="rounded-xl bg-base-100 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.04)]">
+        <p className="text-sm text-base-content/70">
+          No data yet. Make sure there are records in thinking-corpus.jsonl.
         </p>
       </div>
     );
@@ -208,17 +219,19 @@ export function VocabStats() {
       {/* summary cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {[
-          { label: "Thinking 条数", value: data.totalRecords },
-          { label: "总词数（含重复）", value: data.totalTokens.toLocaleString() },
-          { label: "不重复单词", value: data.words.length },
-          { label: "高频短语", value: data.phrases.length },
+          { label: "Thinking records", value: data.totalRecords },
+          { label: "Total tokens", value: data.totalTokens.toLocaleString() },
+          { label: "Unique words", value: data.words.length },
+          { label: "Frequent phrases", value: data.phrases.length },
         ].map((c) => (
           <div
             key={c.label}
-            className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
+            className="group rounded-xl bg-base-100 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_55px_rgba(15,23,42,0.08)]"
           >
-            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">{c.label}</p>
-            <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{c.value}</p>
+            <p className="text-xs font-medium uppercase tracking-[0.16em] text-base-content/50">
+              {c.label}
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-base-content">{c.value}</p>
           </div>
         ))}
       </div>
@@ -235,7 +248,7 @@ export function VocabStats() {
               setSearch("");
             }}
           >
-            单词频次
+            Word frequency
           </button>
           <button
             type="button"
@@ -246,13 +259,13 @@ export function VocabStats() {
               setSearch("");
             }}
           >
-            短语频次
+            Phrase frequency
           </button>
         </div>
         <SearchInput value={search} onChange={setSearch} />
         {tab === "words" && (
           <label className="label cursor-pointer gap-2">
-            <span className="label-text text-sm">只看生词</span>
+            <span className="label-text text-sm">Only starred words</span>
             <input
               type="checkbox"
               className="toggle toggle-sm"
@@ -262,7 +275,7 @@ export function VocabStats() {
           </label>
         )}
         <label className="label cursor-pointer gap-2">
-          <span className="label-text text-sm">最小次数</span>
+          <span className="label-text text-sm">Min count</span>
           <select
             className="select select-xs"
             value={minCount}
@@ -282,18 +295,18 @@ export function VocabStats() {
               className={`btn btn-xs ${!sortAsc ? "btn-active" : ""}`}
               onClick={() => setSortAsc(false)}
             >
-              次数↓
+              Count ↓
             </button>
             <button
               type="button"
               className={`btn btn-xs ${sortAsc ? "btn-active" : ""}`}
               onClick={() => setSortAsc(true)}
             >
-              次数↑
+              Count ↑
             </button>
           </div>
           <label className="label cursor-pointer gap-2">
-            <span className="label-text text-sm">图表</span>
+            <span className="label-text text-sm">Chart</span>
             <input
               type="checkbox"
               className="toggle toggle-sm"
@@ -307,7 +320,7 @@ export function VocabStats() {
             onClick={handleExport}
             disabled={currentItems.length === 0}
           >
-            导出当前列表
+            Export current list
           </button>
         </div>
       </div>
@@ -316,9 +329,9 @@ export function VocabStats() {
       {showChart && <BarChart items={chartItems} />}
 
       {/* grid cards */}
-      <div className="rounded-xl border border-base-300 p-3">
+      <div className="rounded-xl bg-base-100 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.04)]">
         {currentItems.length === 0 ? (
-          <div className="py-8 text-center opacity-50">无匹配结果</div>
+          <div className="py-8 text-center opacity-50">No matching results</div>
         ) : (
           <div className="grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-3 lg:grid-cols-4">
             {currentItems.map((item, index) => {
@@ -328,8 +341,8 @@ export function VocabStats() {
               return (
                 <div
                   key={text}
-                  className={`flex cursor-pointer flex-col justify-between rounded-lg border bg-base-100 p-3 text-sm hover:border-primary/60 hover:bg-base-200 ${
-                    starred ? "border-warning" : "border-base-300"
+                  className={`flex cursor-pointer flex-col justify-between rounded-lg bg-base-100 p-3 text-sm shadow-[0_2px_8px_rgba(15,23,42,0.03)] transition hover:bg-base-200 hover:shadow-[0_4px_12px_rgba(15,23,42,0.06)] ${
+                    starred ? "ring-1 ring-warning/50" : ""
                   }`}
                   onClick={() => {
                     router.push(`/thinking?highlight=${encodeURIComponent(text)}`);
@@ -348,7 +361,7 @@ export function VocabStats() {
                           e.stopPropagation();
                           toggleStar(text);
                         }}
-                        aria-label={starred ? "取消生词标记" : "标记为生词"}
+                        aria-label={starred ? "Unstar word" : "Mark as new word"}
                       >
                         {starred ? (
                           <svg
@@ -375,9 +388,9 @@ export function VocabStats() {
                     )}
                   </div>
                   <div className="flex items-center justify-between text-xs text-zinc-500">
-                    <span>{tab === "words" ? "单词" : "短语"}</span>
+                    <span>{tab === "words" ? "Word" : "Phrase"}</span>
                     <span className="font-semibold text-zinc-700 dark:text-zinc-200">
-                      {item.count} 次
+                      {item.count} times
                     </span>
                   </div>
                 </div>
