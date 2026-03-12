@@ -277,18 +277,18 @@ export function VocabStats() {
           <button
             type="button"
             role="tab"
-            className={`tab ${tab === "words" ? "tab-active" : ""}`}
-            onClick={() => setTab("words")}
-          >
-            Word
-          </button>
-          <button
-            type="button"
-            role="tab"
             className={`tab ${tab === "phrases" ? "tab-active" : ""}`}
             onClick={() => setTab("phrases")}
           >
             Phrase
+          </button>
+          <button
+            type="button"
+            role="tab"
+            className={`tab ${tab === "words" ? "tab-active" : ""}`}
+            onClick={() => setTab("words")}
+          >
+            Word
           </button>
         </div>
         <input

@@ -50,6 +50,7 @@ function toDateKey(iso: string): string {
 // -------- Optional history import (exported Cursor chat JSON / JSONL) --------
 
 let historyEventsCache: CursorEvent[] | null = null;
+let historyTitlesByConversationId: Record<string, string> | null = null;
 
 function getHistoryJsonPath(): string | undefined {
   const p = process.env.CURSOR_HISTORY_JSON_PATH;
@@ -154,15 +155,33 @@ function getHistoryEvents(): CursorEvent[] {
   const p = getHistoryJsonPath();
   if (!p) {
     historyEventsCache = [];
+    historyTitlesByConversationId = {};
     return historyEventsCache;
   }
   try {
     const conversations = parseHistoryFile(p);
+    const titles: Record<string, string> = {};
+    for (const raw of conversations) {
+      const conv: any = raw;
+      const cid = normalizeConversationId(conv);
+      const title = typeof conv?.title === "string" ? conv.title.trim() : "";
+      if (cid && title) titles[cid] = title;
+    }
+    historyTitlesByConversationId = titles;
     historyEventsCache = buildHistoryEvents(conversations);
   } catch {
     historyEventsCache = [];
+    historyTitlesByConversationId = {};
   }
   return historyEventsCache;
+}
+
+export function getConversationTitle(conversationId: string | null | undefined): string | undefined {
+  if (!conversationId) return undefined;
+  if (!historyTitlesByConversationId) {
+    void getHistoryEvents();
+  }
+  return historyTitlesByConversationId?.[conversationId] || undefined;
 }
 
 function getAllEvents(): CursorEvent[] {

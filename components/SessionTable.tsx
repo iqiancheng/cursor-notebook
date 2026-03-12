@@ -8,6 +8,7 @@ type Session = {
   duration_ms?: number;
   timestamp?: string;
   start?: string;
+  title?: string;
 };
 
 export function SessionTable() {
@@ -72,6 +73,9 @@ export function SessionTable() {
               Session
             </th>
             <th className="p-3 text-xs font-semibold uppercase tracking-[0.14em] text-base-content/60">
+              Title
+            </th>
+            <th className="p-3 text-xs font-semibold uppercase tracking-[0.14em] text-base-content/60">
               End time
             </th>
             <th className="p-3 text-xs font-semibold uppercase tracking-[0.14em] text-base-content/60">
@@ -97,6 +101,9 @@ export function SessionTable() {
                     })}
                   </span>
                 )}
+              </td>
+              <td className="p-3 text-base-content/70">
+                {s.title ?? "—"}
               </td>
               <td className="p-3 text-base-content/70">
                 {s.timestamp ? s.timestamp.slice(0, 19).replace("T", " ") : "—"}

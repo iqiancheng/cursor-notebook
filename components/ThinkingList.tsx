@@ -136,7 +136,9 @@ function formatDuration(ms: number): string {
 
 function thinkingMeta(record: ThinkingRecord, index: number): string {
   const time = record.timestamp.slice(0, 19).replace("T", " ");
-  return `#${index + 1} · ${time} · ${record.model} · ${formatDuration(record.duration_ms)}`;
+  const rawModel = record.model?.trim();
+  const model = !rawModel || rawModel.toLowerCase() === "default" ? "Auto" : rawModel;
+  return `#${index + 1} · ${time} · ${model} · ${formatDuration(record.duration_ms)}`;
 }
 
 function PlayButton({ playing, onClick }: { playing: boolean; onClick: () => void }) {
@@ -237,7 +239,7 @@ function GroupCard({
       <span className="pointer-events-none absolute left-2 top-4 bottom-0 w-px bg-base-300/50" />
       <span className="pointer-events-none absolute left-[5px] top-4 h-2.5 w-2.5 rounded-full border-2 border-base-100 bg-primary shadow-sm" />
       {prompt && (
-        <div className="mb-3 rounded-lg bg-primary/5 p-3 ring-1 ring-primary/20">
+        <div className="mb-3 rounded-lg bg-primary/5 px-3 py-2 ring-1 ring-primary/20">
           <div className="mb-1 flex items-center justify-between gap-2">
             <span className="block text-xs font-medium uppercase tracking-wider text-primary/80">
             </span>
