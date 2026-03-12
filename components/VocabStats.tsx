@@ -84,8 +84,12 @@ function BarChart({
       const textColor = isDark ? "#9ca3af" : "#6b7280";
       const lineColor = isDark ? "#374151" : "#e5e7eb";
       const labelColor = isDark ? "#d1d5db" : "#374151";
+      const seriesColor =
+        primaryColor.startsWith("hsl(")
+          ? primaryColor.replace("hsl(", "hsla(").replace(")", ", 0.35)")
+          : primaryColor;
       chart.setOption({
-        color: [primaryColor],
+        color: [seriesColor],
         tooltip: {
           trigger: "axis",
           axisPointer: { type: "shadow" },
@@ -168,7 +172,7 @@ export function VocabStats() {
   const isDark = useIsDark();
   const [data, setData] = useState<VocabData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<Tab>("words");
+  const [tab, setTab] = useState<Tab>("phrases");
   const [search, setSearch] = useState("");
   const [starred, setStarred] = useState<{ words: string[]; phrases: string[] }>(loadStarred);
 
