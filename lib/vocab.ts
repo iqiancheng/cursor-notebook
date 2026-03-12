@@ -96,7 +96,7 @@ function countWords(tokens: string[]): WordFreq[] {
     .sort((a, b) => b.count - a.count);
 }
 
-function extractPhrases(tokens: string[], minCount = 2): PhraseFreq[] {
+function extractPhrases(tokens: string[], minCount = 1): PhraseFreq[] {
   const freq2 = new Map<string, number>();
   const freq3 = new Map<string, number>();
 
@@ -165,7 +165,7 @@ export function getVocabStats(opts?: {
   }
 
   const words = countWords(allTokens).slice(0, opts?.wordLimit ?? 200);
-  const phrases = extractPhrases(allTokens, 2).slice(0, opts?.phraseLimit ?? 200);
+  const phrases = extractPhrases(allTokens, 1).slice(0, opts?.phraseLimit ?? 200);
 
   const data: VocabResult = {
     words,

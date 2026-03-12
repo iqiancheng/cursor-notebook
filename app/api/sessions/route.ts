@@ -1,4 +1,39 @@
-import { getEvents, getConversationTitle } from "@/lib/events";
+import fs from "fs";
+import os from "os";
+import { getEvents } from "@/lib/events";
+
+function getPromptCorpusPath(): string {
+  if (process.env.PROMPT_CORPUS_PATH) return process.env.PROMPT_CORPUS_PATH;
+  const isWin = os.platform() === "win32";
+  const home = isWin ? process.env.USERPROFILE || os.homedir() : process.env.HOME || os.homedir();
+  const sep = isWin ? "\\" : "/";
+  return `${home}${sep}prompt-corpus.jsonl`;
+}
+
+function buildTitleMapFromCorpus() {
+  const p = getPromptCorpusPath();
+  if (!fs.existsSync(p)) return new Map<string, string>();
+  const raw = fs.readFileSync(p, "utf-8").trim();
+  if (!raw) return new Map<string, string>();
+  const map = new Map<string, string>();
+  const lines = raw.split("\n");
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    try {
+      const row = JSON.parse(line) as { conversation_id?: string; prompt?: string };
+      const cid = typeof row.conversation_id === "string" ? row.conversation_id : "";
+      const prompt = typeof row.prompt === "string" ? row.prompt : "";
+      if (!cid || !prompt || map.has(cid)) continue;
+      const firstLine = prompt.split(/\r?\n/)[0]?.trim() ?? "";
+      if (!firstLine) continue;
+      const title = firstLine.length > 20 ? `${firstLine.slice(0, 20)}…` : firstLine;
+      map.set(cid, title);
+    } catch {
+      // skip invalid lines
+    }
+  }
+  return map;
+}
 
 export async function GET() {
   const events = getEvents();
@@ -48,9 +83,10 @@ export async function GET() {
     .filter((s) => s.timestamp)
     .sort((a, b) => (b.timestamp ?? "").localeCompare(a.timestamp ?? ""));
 
+  const titleMap = buildTitleMapFromCorpus();
   const sessionsWithTitle = sessions.map((s) => ({
     ...s,
-    title: getConversationTitle(s.session_id) ?? s.title,
+    title: titleMap.get(s.session_id) ?? s.title,
   }));
 
   return Response.json({ sessions: sessionsWithTitle });
