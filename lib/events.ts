@@ -254,3 +254,28 @@ export function getSameWeekdayLastWeek(): string {
   d.setDate(d.getDate() - 7);
   return d.toISOString().slice(0, 10);
 }
+
+export function getStatsPrevWeek() {
+  const now = new Date();
+  const to = new Date(now);
+  to.setDate(to.getDate() - 8);
+  const from = new Date(to);
+  from.setDate(from.getDate() - 6);
+  const fromStr = from.toISOString().slice(0, 10);
+  const toStr = to.toISOString().slice(0, 10);
+
+  const events = getAllEvents();
+  const filtered = events.filter((e) => {
+    const d = toDateKey(e.timestamp);
+    return d >= fromStr && d <= toStr;
+  });
+
+  return {
+    prompts: filtered.filter((e) => e.event_type === "beforeSubmitPrompt").length,
+    toolCalls: filtered.filter((e) => e.event_type === "postToolUse").length,
+    sessions: filtered.filter((e) => e.event_type === "sessionStart").length,
+    thoughts: filtered.filter((e) => e.event_type === "afterAgentThought").length,
+    fileEdits: filtered.filter((e) => e.event_type === "afterFileEdit").length,
+  };
+}
+

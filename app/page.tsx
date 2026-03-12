@@ -16,9 +16,9 @@ export default function Home() {
       </header>
       <section>
         <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.16em] text-base-content/50">
-          This week
+          This week vs prev week
         </h2>
-        <StatCards period="week" />
+        <StatCards period="week" compareWithPrevWeek />
       </section>
       <section>
         <DailyChart days={14} />

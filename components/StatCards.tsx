@@ -27,7 +27,7 @@ export function StatCards({
 
   useEffect(() => {
     const params = new URLSearchParams({ period });
-    if (compareWithPrevWeek && period === "day") params.set("compare", "prevWeek");
+    if (compareWithPrevWeek && (period === "day" || period === "week")) params.set("compare", "prevWeek");
     fetch(`/api/stats?${params}`)
       .then((r) => r.json())
       .then(setStats)
@@ -66,18 +66,18 @@ export function StatCards({
   ];
 
   const prevDate = stats.prevDate;
-  const prevDayLabel = prevDate
+  const prevLabel = period === "day" && prevDate
     ? new Date(prevDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "short" })
-    : "last week";
+    : "prev week";
 
   function Delta({ value, prevVal }: { value: number; prevVal?: number }) {
     if (prevVal == null) return null;
     const delta = value - prevVal;
-    if (delta === 0) return <span className="text-xs text-base-content/40">= {prevDayLabel}</span>;
+    if (delta === 0) return <span className="text-xs text-base-content/40">= {prevLabel}</span>;
     const up = delta > 0;
     return (
       <span className={`text-xs ${up ? "text-success" : "text-base-content/50"}`}>
-        {up ? "↑" : "↓"} {Math.abs(delta)} vs {prevDayLabel}
+        {up ? "↑" : "↓"} {Math.abs(delta)} vs {prevLabel}
       </span>
     );
   }
