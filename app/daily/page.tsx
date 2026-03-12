@@ -9,20 +9,14 @@ export default function DailyPage() {
           Daily usage
         </h1>
         <p className="text-sm text-base-content/60">
-          Daily view of your Cursor usage: prompts, tool calls, sessions and thinking events over time.
+          Today vs same weekday last week. Trend over last 30 days.
         </p>
       </header>
       <section>
         <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.16em] text-base-content/50">
-          Today
+          Today vs last week
         </h2>
-        <StatCards period="day" />
-      </section>
-      <section className="space-y-4">
-        <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.16em] text-base-content/50">
-          Last 7 days summary
-        </h2>
-        <StatCards period="week" />
+        <StatCards period="day" compareWithPrevWeek />
       </section>
       <section>
         <DailyChart days={30} />

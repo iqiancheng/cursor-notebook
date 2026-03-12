@@ -14,9 +14,17 @@ type VocabData = {
 
 type Tab = "words" | "phrases";
 
-function BarChart({ items }: { items: { name: string; value: number }[] }) {
+function BarChart({
+  items,
+  onBarClick,
+}: {
+  items: { name: string; value: number }[];
+  onBarClick?: (name: string) => void;
+}) {
   const chartRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<ReturnType<typeof import("echarts")["init"]> | null>(null);
+  const onBarClickRef = useRef(onBarClick);
+  onBarClickRef.current = onBarClick;
 
   useEffect(() => {
     if (!chartRef.current || items.length === 0) return;
@@ -56,8 +64,16 @@ function BarChart({ items }: { items: { name: string; value: number }[] }) {
             type: "bar",
             data: top30.map((d) => d.value),
             itemStyle: { borderRadius: [0, 6, 6, 0] },
+            emphasis: { itemStyle: { shadowBlur: 8, shadowColor: "rgba(59,130,246,0.4)" } },
           },
         ],
+      });
+
+      chart.off("click");
+      chart.on("click", (params: { componentType: string; name: string }) => {
+        if (params.componentType === "series" && params.name) {
+          onBarClickRef.current?.(params.name);
+        }
       });
 
       const onResize = () => chart.resize();
@@ -94,7 +110,6 @@ export function VocabStats() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("words");
   const [search, setSearch] = useState("");
-  const [showChart, setShowChart] = useState(true);
   const [starredWords, setStarredWords] = useState<string[]>(() => {
     if (typeof window === "undefined") return [];
     try {
@@ -112,6 +127,7 @@ export function VocabStats() {
   const [onlyStarred, setOnlyStarred] = useState(false);
   const [sortAsc, setSortAsc] = useState(false);
   const [minCount, setMinCount] = useState(1);
+  const [showFullList, setShowFullList] = useState(false);
 
   useEffect(() => {
     fetch("/api/vocab?wordLimit=1000&phraseLimit=1000")
@@ -305,15 +321,6 @@ export function VocabStats() {
               Count ↑
             </button>
           </div>
-          <label className="label cursor-pointer gap-2">
-            <span className="label-text text-sm">Chart</span>
-            <input
-              type="checkbox"
-              className="toggle toggle-sm"
-              checked={showChart}
-              onChange={() => setShowChart(!showChart)}
-            />
-          </label>
           <button
             type="button"
             className="btn btn-ghost btn-xs"
@@ -325,77 +332,102 @@ export function VocabStats() {
         </div>
       </div>
 
-      {/* chart */}
-      {showChart && <BarChart items={chartItems} />}
-
-      {/* grid cards */}
+      {/* chart - primary view, click bar to open in Thinking */}
       <div className="rounded-xl bg-base-100 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.04)]">
-        {currentItems.length === 0 ? (
-          <div className="py-8 text-center opacity-50">No matching results</div>
-        ) : (
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-3 lg:grid-cols-4">
-            {currentItems.map((item, index) => {
-              const isWord = "word" in item;
-              const text = isWord ? item.word : (item as PhraseFreq).phrase;
-              const starred = isWord && starredWords.includes(text);
-              return (
-                <div
-                  key={text}
-                  className={`flex cursor-pointer flex-col justify-between rounded-lg bg-base-100 p-3 text-sm shadow-[0_2px_8px_rgba(15,23,42,0.03)] transition hover:bg-base-200 hover:shadow-[0_4px_12px_rgba(15,23,42,0.06)] ${
-                    starred ? "ring-1 ring-warning/50" : ""
-                  }`}
-                  onClick={() => {
-                    router.push(`/thinking?highlight=${encodeURIComponent(text)}`);
-                  }}
-                >
-                  <div className="mb-2 flex items-start justify-between gap-1">
-                    <div className="font-mono text-xs md:text-sm break-words">
-                      <span className="mr-1 text-[10px] text-zinc-400">#{index + 1}</span>
-                      {text}
-                    </div>
-                    {isWord && (
-                      <button
-                        type="button"
-                        className="btn btn-ghost btn-xs px-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleStar(text);
-                        }}
-                        aria-label={starred ? "Unstar word" : "Mark as new word"}
-                      >
-                        {starred ? (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            className="h-3 w-3 text-warning"
+        <p className="mb-2 text-xs text-base-content/50">Top 30 · Click a bar to view in Thinking</p>
+        <BarChart
+          items={chartItems}
+          onBarClick={(name) => router.push(`/thinking?highlight=${encodeURIComponent(name)}`)}
+        />
+      </div>
+
+      {/* collapsible full list */}
+      <div className="rounded-xl bg-base-100 shadow-[0_18px_45px_rgba(15,23,42,0.04)]">
+        <button
+          type="button"
+          onClick={() => setShowFullList((v) => !v)}
+          className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-base-content/80 hover:bg-base-200/50 transition"
+        >
+          <span>{showFullList ? "Hide" : "Show"} full list ({currentItems.length} items)</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className={`h-4 w-4 transition ${showFullList ? "rotate-180" : ""}`}
+          >
+            <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+          </svg>
+        </button>
+        {showFullList && (
+          <div className="border-t border-base-200 p-4">
+            {currentItems.length === 0 ? (
+              <div className="py-8 text-center opacity-50">No matching results</div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-3 lg:grid-cols-4">
+                {currentItems.map((item, index) => {
+                  const isWord = "word" in item;
+                  const text = isWord ? item.word : (item as PhraseFreq).phrase;
+                  const starred = isWord && starredWords.includes(text);
+                  return (
+                    <div
+                      key={text}
+                      className={`flex cursor-pointer flex-col justify-between rounded-lg bg-base-100 p-3 text-sm shadow-[0_2px_8px_rgba(15,23,42,0.03)] transition hover:bg-base-200 hover:shadow-[0_4px_12px_rgba(15,23,42,0.06)] ${
+                        starred ? "ring-1 ring-warning/50" : ""
+                      }`}
+                      onClick={() => {
+                        router.push(`/thinking?highlight=${encodeURIComponent(text)}`);
+                      }}
+                    >
+                      <div className="mb-2 flex items-start justify-between gap-1">
+                        <div className="font-mono text-xs md:text-sm break-words">
+                          <span className="mr-1 text-[10px] text-zinc-400">#{index + 1}</span>
+                          {text}
+                        </div>
+                        {isWord && (
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-xs px-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleStar(text);
+                            }}
+                            aria-label={starred ? "Unstar word" : "Mark as new word"}
                           >
-                            <path d="M12 2.25l2.955 6.016 6.645.967-4.8 4.68 1.133 6.617L12 17.75l-5.933 3.12 1.133-6.617-4.8-4.68 6.645-.967L12 2.25z" />
-                          </svg>
-                        ) : (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            className="h-3 w-3"
-                          >
-                            <path d="M12 2.75l2.7 5.5 6.05.88-4.375 4.27 1.033 6.02L12 16.96l-5.408 2.91 1.033-6.02L3.25 9.13l6.05-.88L12 2.75z" />
-                          </svg>
+                            {starred ? (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                className="h-3 w-3 text-warning"
+                              >
+                                <path d="M12 2.25l2.955 6.016 6.645.967-4.8 4.68 1.133 6.617L12 17.75l-5.933 3.12 1.133-6.617-4.8-4.68 6.645-.967L12 2.25z" />
+                              </svg>
+                            ) : (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                className="h-3 w-3"
+                              >
+                                <path d="M12 2.75l2.7 5.5 6.05.88-4.375 4.27 1.033 6.02L12 16.96l-5.408 2.91 1.033-6.02L3.25 9.13l6.05-.88L12 2.75z" />
+                              </svg>
+                            )}
+                          </button>
                         )}
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-zinc-500">
-                    <span>{tab === "words" ? "Word" : "Phrase"}</span>
-                    <span className="font-semibold text-zinc-700 dark:text-zinc-200">
-                      {item.count} times
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-zinc-500">
+                        <span>{tab === "words" ? "Word" : "Phrase"}</span>
+                        <span className="font-semibold text-zinc-700 dark:text-zinc-200">
+                          {item.count} times
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>

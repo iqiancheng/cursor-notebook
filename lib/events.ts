@@ -236,3 +236,21 @@ export function getStats(period: "day" | "week" | "month") {
     byDay: aggregateByDay(filtered),
   };
 }
+
+export function getStatsForDate(dateStr: string) {
+  const events = getAllEvents();
+  const filtered = events.filter((e) => toDateKey(e.timestamp) === dateStr);
+  const prompts = filtered.filter((e) => e.event_type === "beforeSubmitPrompt").length;
+  const toolCalls = filtered.filter((e) => e.event_type === "postToolUse").length;
+  const sessions = filtered.filter((e) => e.event_type === "sessionStart").length;
+  const thoughts = filtered.filter((e) => e.event_type === "afterAgentThought").length;
+  const fileEdits = filtered.filter((e) => e.event_type === "afterFileEdit").length;
+  return { prompts, toolCalls, sessions, thoughts, fileEdits };
+}
+
+export function getSameWeekdayLastWeek(): string {
+  const now = new Date();
+  const d = new Date(now);
+  d.setDate(d.getDate() - 7);
+  return d.toISOString().slice(0, 10);
+}
