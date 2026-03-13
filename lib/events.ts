@@ -12,7 +12,7 @@ const defaultCorpusPath = path.join(
 );
 
 export function getEventsPath(): string {
-  return process.env.EVENTS_JSONL_PATH || defaultEventsPath;
+  return process.env.EVENTS_JSONL_PATH || process.env.CURSOR_EVENTS_PATH || defaultEventsPath;
 }
 
 export function getCorpusPath(): string {

@@ -65,16 +65,30 @@ function buildPayload(eventType, input) {
     case 'preCompact':
       return {
         ...base,
+        session_id: input.session_id ?? input.conversation_id ?? null,
         context_tokens: input.context_tokens ?? 0,
         context_usage_percent: input.context_usage_percent ?? 0,
         message_count: input.message_count ?? 0,
       };
-    case 'afterFileEdit':
+    case 'afterFileEdit': {
+      const edits = Array.isArray(input.edits) ? input.edits : [];
+      let lines_added = 0;
+      let lines_removed = 0;
+      for (const ed of edits) {
+        const oldStr = typeof ed.old_string === 'string' ? ed.old_string : '';
+        const newStr = typeof ed.new_string === 'string' ? ed.new_string : '';
+        lines_removed += oldStr.split(/\r?\n/).length;
+        lines_added += newStr.split(/\r?\n/).length;
+      }
       return {
         ...base,
+        session_id: input.session_id ?? input.conversation_id ?? null,
         file_path: input.file_path ?? null,
-        edits_count: Array.isArray(input.edits) ? input.edits.length : 0,
+        edits_count: edits.length,
+        lines_added,
+        lines_removed,
       };
+    }
     default:
       return base;
   }

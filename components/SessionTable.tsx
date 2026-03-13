@@ -9,6 +9,10 @@ type Session = {
   timestamp?: string;
   start?: string;
   title?: string;
+  context_tokens?: number;
+  file_edits?: number;
+  lines_added?: number;
+  lines_removed?: number;
 };
 
 export function SessionTable() {
@@ -106,6 +110,9 @@ export function SessionTable() {
             <th className="p-3 text-xs font-semibold uppercase tracking-[0.14em] text-base-content/60">
               Duration
             </th>
+            <th className="p-3 text-xs font-semibold uppercase tracking-[0.14em] text-base-content/60" title="File edit line deltas">
+              Lines changed
+            </th>
             <th className="p-3 text-xs font-semibold uppercase tracking-[0.14em] text-base-content/60">
               End reason
             </th>
@@ -116,7 +123,7 @@ export function SessionTable() {
             const startLabel = getSessionStart(s.timestamp, s.duration_ms);
             return (
               <tr key={s.session_id} className="border-b border-base-200/80 last:border-0">
-                <td className="p-3 text-base-content/70">
+                <td className="whitespace-nowrap p-3 text-base-content/70">
                   #{i + 1}
                   {startLabel && (
                     <span className="ml-2 text-base-content/50">{startLabel}</span>
@@ -125,10 +132,15 @@ export function SessionTable() {
                 <td className="p-3 text-base-content/70">
                   {s.title ?? "—"}
                 </td>
-                <td className="p-3 text-base-content/70">
+                <td className="whitespace-nowrap p-3 text-base-content/70">
                   {s.timestamp ? formatLocalDateTime(s.timestamp) : "—"}
                 </td>
                 <td className="p-3 text-base-content/70">{formatMs(s.duration_ms)}</td>
+                <td className="p-3 text-base-content/70">
+                  {s.lines_added != null && s.lines_removed != null && (s.lines_added > 0 || s.lines_removed > 0)
+                    ? `+${s.lines_added} / −${s.lines_removed}`
+                    : "—"}
+                </td>
                 <td className="p-3 text-base-content/70">{s.reason ?? "—"}</td>
               </tr>
             );
