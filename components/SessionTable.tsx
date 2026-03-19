@@ -110,9 +110,6 @@ export function SessionTable() {
             <th className="p-3 text-xs font-semibold uppercase tracking-[0.14em] text-base-content/60">
               Duration
             </th>
-            <th className="p-3 text-xs font-semibold uppercase tracking-[0.14em] text-base-content/60" title="File edit line deltas">
-              Lines changed
-            </th>
             <th className="p-3 text-xs font-semibold uppercase tracking-[0.14em] text-base-content/60">
               End reason
             </th>
@@ -136,11 +133,6 @@ export function SessionTable() {
                   {s.timestamp ? formatLocalDateTime(s.timestamp) : "—"}
                 </td>
                 <td className="p-3 text-base-content/70">{formatMs(s.duration_ms)}</td>
-                <td className="p-3 text-base-content/70">
-                  {s.lines_added != null && s.lines_removed != null && (s.lines_added > 0 || s.lines_removed > 0)
-                    ? `+${s.lines_added} / −${s.lines_removed}`
-                    : "—"}
-                </td>
                 <td className="p-3 text-base-content/70">{s.reason ?? "—"}</td>
               </tr>
             );

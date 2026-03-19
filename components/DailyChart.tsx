@@ -4,12 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import * as echarts from "echarts";
 
 type ByDay = Record<string, Record<string, number>>;
-type ChartMode = "line" | "stacked";
 
 export function DailyChart({ days = 7 }: { days?: number }) {
   const chartRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<ByDay | null>(null);
-  const [mode, setMode] = useState<ChartMode>("line");
 
   useEffect(() => {
     const to = new Date().toISOString().slice(0, 10);
@@ -32,18 +30,11 @@ export function DailyChart({ days = 7 }: { days?: number }) {
     const onResize = () => chart.resize();
     window.addEventListener("resize", onResize);
 
-    const isStacked = mode === "stacked";
-    const series = isStacked
-      ? [
-          { name: "Prompts", type: "line", stack: "total", data: prompts, smooth: true, symbol: "circle", symbolSize: 4, areaStyle: { opacity: 0.4 } },
-          { name: "Tool calls", type: "line", stack: "total", data: toolCalls, smooth: true, symbol: "circle", symbolSize: 4, areaStyle: { opacity: 0.4 } },
-          { name: "Thinking", type: "line", stack: "total", data: thoughts, smooth: true, symbol: "circle", symbolSize: 4, areaStyle: { opacity: 0.4 } },
-        ]
-      : [
-          { name: "Prompts", type: "line", data: prompts, smooth: true, symbol: "circle", symbolSize: 4, areaStyle: { opacity: 0.12 } },
-          { name: "Tool calls", type: "line", data: toolCalls, smooth: true, symbol: "circle", symbolSize: 4, areaStyle: { opacity: 0.12 } },
-          { name: "Thinking", type: "line", data: thoughts, smooth: true, symbol: "circle", symbolSize: 4, areaStyle: { opacity: 0.12 } },
-        ];
+    const series = [
+      { name: "Prompts", type: "line", data: prompts, smooth: true, symbol: "circle", symbolSize: 4, areaStyle: { opacity: 0.12 } },
+      { name: "Tool calls", type: "line", data: toolCalls, smooth: true, symbol: "circle", symbolSize: 4, areaStyle: { opacity: 0.12 } },
+      { name: "Thinking", type: "line", data: thoughts, smooth: true, symbol: "circle", symbolSize: 4, areaStyle: { opacity: 0.12 } },
+    ];
 
     chart.setOption({
       color: ["#3b82f6", "#0ea5e9", "#16a34a"],
@@ -82,7 +73,7 @@ export function DailyChart({ days = 7 }: { days?: number }) {
       window.removeEventListener("resize", onResize);
       chart.dispose();
     };
-  }, [data, mode]);
+  }, [data]);
 
   if (data === null) {
     return (
@@ -98,40 +89,6 @@ export function DailyChart({ days = 7 }: { days?: number }) {
         <h3 className="text-sm font-semibold text-base-content">
           Last {days} days
         </h3>
-        <div
-          className="cursor-pointer rounded p-1 text-base-content/60 hover:text-base-content"
-          onClick={() => setMode(mode === "line" ? "stacked" : "line")}
-          role="button"
-          aria-label={mode === "line" ? "Switch to stacked mode" : "Switch to line mode"}
-          aria-pressed={mode === "stacked"}
-        >
-          {mode === "line" ? (
-            <svg viewBox="0 0 24 24" className="h-3 w-3" aria-hidden="true">
-              <polyline
-                points="3 17 8 11 13 14 21 5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" className="h-3 w-3" aria-hidden="true">
-              <path
-                d="M3 16L8 10L13 13L21 6V18H3Z"
-                fill="currentColor"
-                fillOpacity="0.7"
-              />
-              <path
-                d="M3 18H21"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeLinecap="round"
-              />
-            </svg>
-          )}
-        </div>
       </div>
       <div ref={chartRef} className="h-64 w-full" />
     </div>
